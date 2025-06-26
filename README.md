@@ -1,4 +1,83 @@
-# Welcome to your Lovable project
+# Cutie Utensil Quiz Frontend
+
+A delightful personality quiz that reveals which kitchen utensil matches your personality! Built with React, TypeScript, and Tailwind CSS.
+
+## Features
+
+- Interactive chat-style quiz interface
+- Beautiful, responsive design
+- Real-time progress tracking
+- Detailed personality results with compatibility
+- Share results with friends
+- Server-side quiz logic and calculations
+
+## Architecture
+
+This frontend is designed as a pure UI layer that connects to a FastAPI backend:
+
+- **Frontend**: React + TypeScript + Tailwind CSS (UI only)
+- **Backend**: FastAPI (quiz logic, calculations, data)
+- **Communication**: REST API calls
+
+## Setup
+
+1. Install dependencies:
+```bash
+npm install
+```
+
+2. Create a `.env.local` file in the root directory with:
+```
+VITE_API_URL=http://localhost:8000
+```
+
+3. Start the development server:
+```bash
+npm run dev
+```
+
+## Backend Connection
+
+This frontend requires a FastAPI backend running on `http://localhost:8000` by default. The backend provides:
+
+- Quiz questions and options
+- Personality calculations
+- Utensil matching logic
+- Result generation
+
+## API Endpoints
+
+The frontend expects the following API endpoints:
+- `GET /quiz/questions` - Get all quiz questions and options
+- `POST /quiz/submit` - Submit quiz answers and receive personality results
+
+## Development
+
+- Built with Vite + React + TypeScript
+- Uses shadcn/ui components
+- Styled with Tailwind CSS
+- State management with React hooks
+- API communication with fetch
+
+## Build
+
+```bash
+npm run build
+```
+
+## Project Structure
+
+```
+src/
+├── components/          # React components
+│   ├── ChatBot.tsx     # Quiz interface
+│   ├── Results.tsx     # Results display
+│   └── ui/             # shadcn/ui components
+├── lib/
+│   └── api.ts          # API communication
+├── pages/              # Page components
+└── utils/              # Utility functions
+```
 
 ## Project info
 

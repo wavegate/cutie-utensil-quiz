@@ -1,9 +1,8 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { quizQuestions, calculateResult } from '@/utils/quizLogic';
+import { getQuizQuestions, submitQuiz, QuizResult, QuizQuestion } from '@/lib/api';
 import { Bot, User } from 'lucide-react';
 
 interface Message {
@@ -13,14 +12,18 @@ interface Message {
 }
 
 interface ChatBotProps {
-  onComplete: (results: any) => void;
+  onComplete: (results: QuizResult) => void;
 }
 
 const ChatBot: React.FC<ChatBotProps> = ({ onComplete }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [answers, setAnswers] = useState<Record<string, any>>({});
+  const [answers, setAnswers] = useState<Record<string, string>>({});
   const [isTyping, setIsTyping] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [quizQuestions, setQuizQuestions] = useState<QuizQuestion[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -32,19 +35,39 @@ const ChatBot: React.FC<ChatBotProps> = ({ onComplete }) => {
   }, [messages]);
 
   useEffect(() => {
-    // Start with a welcome message
-    const welcomeMessage = {
-      type: 'bot' as const,
-      content: "Hi there! I'm so excited to help you discover your kitchen utensil personality! 🌟 Let's start with some fun questions. Ready?",
-      timestamp: new Date()
+    // Fetch quiz questions from API
+    const fetchQuestions = async () => {
+      try {
+        const questions = await getQuizQuestions();
+        setQuizQuestions(questions);
+        setIsLoading(false);
+        
+        // Start with a welcome message
+        const welcomeMessage = {
+          type: 'bot' as const,
+          content: "Hi there! I'm so excited to help you discover your kitchen utensil personality! 🌟 Let's start with some fun questions. Ready?",
+          timestamp: new Date()
+        };
+        setMessages([welcomeMessage]);
+      } catch (error) {
+        console.error('Error fetching questions:', error);
+        setError('Failed to load quiz questions. Please try again.');
+        setIsLoading(false);
+      }
     };
-    setMessages([welcomeMessage]);
-    
-    // Ask first question after a short delay
-    setTimeout(() => {
-      askQuestion(0);
-    }, 1500);
+
+    fetchQuestions();
   }, []);
+
+  // Start asking questions after questions are loaded and welcome message is set
+  useEffect(() => {
+    if (quizQuestions.length > 0 && messages.length === 1) {
+      // Ask first question after a short delay
+      setTimeout(() => {
+        askQuestion(0);
+      }, 1500);
+    }
+  }, [quizQuestions, messages]);
 
   const typeMessage = (content: string, callback?: () => void) => {
     setIsTyping(true);
@@ -61,17 +84,32 @@ const ChatBot: React.FC<ChatBotProps> = ({ onComplete }) => {
   };
 
   const askQuestion = (questionIndex: number) => {
+    console.log(`Asking question ${questionIndex} of ${quizQuestions.length}`);
     if (questionIndex >= quizQuestions.length) {
-      // Quiz complete
-      const results = calculateResult(answers);
+      // Quiz complete - submit to API
       typeMessage("Wonderful! Let me analyze your answers and reveal your kitchen utensil personality... ✨", () => {
-        setTimeout(() => onComplete(results), 2000);
+        submitAnswersToAPI();
       });
       return;
     }
 
     const question = quizQuestions[questionIndex];
     typeMessage(question.question);
+  };
+
+  const submitAnswersToAPI = async () => {
+    setIsSubmitting(true);
+    try {
+      const results = await submitQuiz(answers);
+      setTimeout(() => onComplete(results), 2000);
+    } catch (error) {
+      console.error('Error submitting quiz:', error);
+      typeMessage("Oops! Something went wrong while calculating your results. Please try again later.", () => {
+        // Could add a retry mechanism here
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleAnswer = (answerKey: string, answerText: string) => {
@@ -99,6 +137,37 @@ const ChatBot: React.FC<ChatBotProps> = ({ onComplete }) => {
       askQuestion(nextIndex);
     }, 1500);
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-yellow-50 to-red-50 p-4 flex items-center justify-center">
+        <Card className="bg-white/90 backdrop-blur-sm border-2 border-orange-200">
+          <CardContent className="p-8 text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading your culinary adventure...</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-yellow-50 to-red-50 p-4 flex items-center justify-center">
+        <Card className="bg-white/90 backdrop-blur-sm border-2 border-orange-200">
+          <CardContent className="p-8 text-center">
+            <p className="text-red-600 mb-4">{error}</p>
+            <Button 
+              onClick={() => window.location.reload()}
+              className="bg-orange-500 hover:bg-orange-600 text-white"
+            >
+              Try Again
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   const currentQuestion = quizQuestions[currentQuestionIndex];
   const progress = ((currentQuestionIndex) / quizQuestions.length) * 100;
@@ -150,7 +219,7 @@ const ChatBot: React.FC<ChatBotProps> = ({ onComplete }) => {
                 </div>
               ))}
               
-              {isTyping && (
+              {(isTyping || isSubmitting) && (
                 <div className="flex items-start space-x-3 animate-fade-in">
                   <div className="flex-shrink-0 w-8 h-8 rounded-full bg-orange-500 text-white flex items-center justify-center">
                     <Bot size={16} />
@@ -170,7 +239,7 @@ const ChatBot: React.FC<ChatBotProps> = ({ onComplete }) => {
             </div>
 
             {/* Answer Options */}
-            {currentQuestion && !isTyping && currentQuestionIndex < quizQuestions.length && (
+            {currentQuestion && !isTyping && !isSubmitting && currentQuestionIndex < quizQuestions.length && (
               <div className="space-y-3">
                 <p className="text-sm text-gray-600 mb-3">Choose your answer:</p>
                 {currentQuestion.options.map((option) => (

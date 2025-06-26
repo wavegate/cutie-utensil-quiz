@@ -1,28 +1,13 @@
-
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { RefreshCw, Heart, Users, Sparkles, Target } from 'lucide-react';
+import { QuizResult } from '@/lib/api';
 
 interface ResultsProps {
-  results: {
-    utensil: {
-      name: string;
-      emoji: string;
-      description: string;
-      traits: string[];
-      strengths: string[];
-    };
-    compatibility: Array<{
-      name: string;
-      emoji: string;
-      reason: string;
-    }>;
-    personalityInsights: string[];
-    funFacts: string[];
-  };
+  results: QuizResult;
   onRestart: () => void;
 }
 
@@ -34,13 +19,13 @@ const Results: React.FC<ResultsProps> = ({ results, onRestart }) => {
         <Card className="bg-white/90 backdrop-blur-sm border-2 border-orange-200 shadow-xl">
           <CardHeader className="text-center pb-4">
             <div className="text-6xl mb-4 animate-bounce">
-              {results.utensil.emoji}
+              {results.emoji}
             </div>
             <CardTitle className="text-3xl font-bold text-gray-800 mb-2">
-              You are a {results.utensil.name}!
+              You are a {results.utensil}!
             </CardTitle>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto leading-relaxed">
-              {results.utensil.description}
+              {results.description}
             </p>
           </CardHeader>
         </Card>
@@ -56,7 +41,7 @@ const Results: React.FC<ResultsProps> = ({ results, onRestart }) => {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {results.utensil.traits.map((trait, index) => (
+                {results.traits.map((trait, index) => (
                   <div key={index} className="flex items-center space-x-2">
                     <span className="text-orange-500">✨</span>
                     <span className="text-gray-700">{trait}</span>
@@ -76,7 +61,7 @@ const Results: React.FC<ResultsProps> = ({ results, onRestart }) => {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {results.utensil.strengths.map((strength, index) => (
+                {results.strengths.map((strength, index) => (
                   <div key={index} className="flex items-center space-x-2">
                     <span className="text-green-500">💪</span>
                     <span className="text-gray-700">{strength}</span>
@@ -118,7 +103,7 @@ const Results: React.FC<ResultsProps> = ({ results, onRestart }) => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {results.personalityInsights.map((insight, index) => (
+              {results.personality_insights.map((insight, index) => (
                 <div key={index} className="bg-blue-50 rounded-lg p-4 border-l-4 border-blue-400">
                   <p className="text-gray-700">{insight}</p>
                 </div>
@@ -134,7 +119,7 @@ const Results: React.FC<ResultsProps> = ({ results, onRestart }) => {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {results.funFacts.map((fact, index) => (
+              {results.fun_facts.map((fact, index) => (
                 <div key={index} className="flex items-start space-x-3 bg-yellow-50 rounded-lg p-3 border border-yellow-200">
                   <span className="text-yellow-500 text-lg">🌟</span>
                   <span className="text-gray-700 text-sm">{fact}</span>
@@ -153,7 +138,7 @@ const Results: React.FC<ResultsProps> = ({ results, onRestart }) => {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button
                 onClick={() => {
-                  const text = `I just discovered I'm a ${results.utensil.name} ${results.utensil.emoji}! What kitchen utensil are you?`;
+                  const text = `I just discovered I'm a ${results.utensil} ${results.emoji}! What kitchen utensil are you?`;
                   if (navigator.share) {
                     navigator.share({ text });
                   } else {
