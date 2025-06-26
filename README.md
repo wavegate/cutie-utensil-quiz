@@ -26,10 +26,21 @@ This frontend is designed as a pure UI layer that connects to a FastAPI backend:
 npm install
 ```
 
-2. Create a `.env.local` file in the root directory with:
-```
-VITE_API_URL=http://localhost:8000
-```
+2. Environment Configuration:
+
+   **For Local Development:**
+   Create a `.env.local` file in the root directory with:
+   ```
+   VITE_API_URL=http://localhost:8000
+   ```
+
+   **For Production:**
+   Create a `.env.production` file in the root directory with:
+   ```
+   VITE_API_URL=https://cutie-utensils-quiz-api-1ad149b78f37.herokuapp.com
+   ```
+
+   **Note:** Environment files (`.env.local`, `.env.production`) are gitignored for security. Use `.env.example` as a template.
 
 3. Start the development server:
 ```bash
